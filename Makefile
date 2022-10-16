@@ -1,4 +1,5 @@
 main: main.cpp 
 	g++ main.cpp -o main
 
-clean
+clean:
+	rm main

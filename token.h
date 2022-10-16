@@ -35,7 +35,7 @@ struct Token {
   }
 
   void printToken() {
-    std::cout << tokenNames[tokenID] << " " << tokenInstance << " "
+    std::cout << tokenNames[tokenID] << " " << tokenInstance << " Line number "
               << lineNumber + 1 << "\n";
   }
 };

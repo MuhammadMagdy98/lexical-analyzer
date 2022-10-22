@@ -3,11 +3,6 @@ I'm using the option 2
 scanner.h:
 we have utility functions
 readInput() => reads input line by line
-isIdentifier() 
-isKeyWord()
-isInteger()
-isOperator()
-isComment() 
 scanner() returns the next token
 testScanner() 
 
@@ -34,7 +29,7 @@ test cases conducted
 P1_test1.cs4280:
 x
 P1_test2.cs4280:
-x xy xyz x1 x2
+x xy xyz    x1      x2
 1 12 23 12345
 begin end loop void var exit scan print main fork then let data func
 = >= <= == : ++ -- * / % . ( ) , { } ; [ ]

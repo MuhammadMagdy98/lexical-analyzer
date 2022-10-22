@@ -1,10 +1,9 @@
 #pragma once
 #include "token.h"
 #include <algorithm>
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include <stdexcept>
-
 
 std::vector<std::string> inputData;
 void readInput() {
@@ -14,175 +13,121 @@ void readInput() {
   }
 }
 
+std::vector<Token> tokens;
 int lineNumber = 0;
 int currentIndex = 0;
 
-std::pair<bool, std::string> isIdentifier(std::string line) {
+char get_next_char() { return inputData[lineNumber][currentIndex++]; }
 
-  int now = currentIndex;
-  // must begin with a lowercase letter
-  if (!islower(line[now]))
-    return {false, ""};
-  std::string currentValue;
-  while (now < line.size()) {
-    if (!isdigit(line[now]) && !isalpha(line[now])) {
-      currentIndex = now;
-      return {true, currentValue};
-    }
-    currentValue += line[now];
-    auto it = std::find(keywords.begin(), keywords.end(), currentValue);
-    // make sure the identifier value is not in keywords list
-    if (it != keywords.end() && now + 1 < line.size() && line[now + 1] == ' ') {
-      return {false, ""};
-    }
-    now++;
-  }
+char curr = '\0';
+char nxt = '\0';
 
-  auto it = std::find(keywords.begin(), keywords.end(), currentValue);
-  if (it == keywords.end()) {
-    currentIndex = now;
-    return {true, currentValue};
-  }
-  return {false, currentValue};
-}
-
-std::pair<bool, std::string> isKeyWord(std::string line) {
-  const int MAX_KEY_WORD_SIZE = 5;
-  int now = currentIndex;
-  // must begin with a lowercase letter
-  if (!islower(line[now]))
-    return {false, ""};
-  std::string currentValue;
-  while (now < line.size()) {
-    if (!isdigit(line[now]) && !isalpha(line[now])) {
-      return {false, ""};
-    }
-    currentValue += line[now];
-    auto it = std::find(keywords.begin(), keywords.end(), currentValue);
-    // make sure the identifier value is not in keywords list
-    if (it != keywords.end() && now + 1 < line.size() && line[now + 1] == ' ') {
-      currentIndex = now + 1;
-      return {true, currentValue};
-    }
-    now++;
-  }
-  auto it = std::find(keywords.begin(), keywords.end(), currentValue);
-  if (it != keywords.end()) {
-    currentIndex = now;
-    return {true, currentValue};
-  }
-  return {false, currentValue};
-}
-
-std::pair<bool, std::string> isInteger(std::string line) {
-  int now = currentIndex;
-  if (!isdigit(line[now]))
-    return {false, ""};
-  std::string currentValue;
-  while (now < line.size() && isdigit(line[now])) {
-    currentValue += line[now++];
-  }
-  currentIndex = now;
-  return {true, currentValue};
-}
-
-std::pair<bool, std::string> isOperator(std::string line) {
-  std::string second = {line[currentIndex], line[currentIndex + 1]};
-  auto it = std::find(operators.begin(), operators.end(), second);
-  if (it != operators.end()) {
-    currentIndex += 2;
-    return {true, second};
-  }
-  std::string first = {line[currentIndex]};
-  it = std::find(operators.begin(), operators.end(), first);
-  if (it != operators.end()) {
-    currentIndex++;
-    return {true, first};
-  }
-  return {false, ""};
-}
-
-std::pair<bool, std::string> isComment(std::string line) {
-  int now = currentIndex;
-  if (line[now] != '#') {
-    return {false, ""};
-  }
-  std::string currentValue = {line[now]};
-  now++;
-  while (now < line.size() && line[now] != '#') {
-    currentValue += line[now++];
-  }
-  currentValue += "#";
-  if (now < line.size()) {
-    now++;
-    currentIndex = now;
-    return {true, currentValue};
-  }
-  return {false, currentValue};
-}
-
+int scanner_index = 0;
 Token scanner() {
-  if (lineNumber >= inputData.size()) {
-    return Token(tokenID::EndOfFile, tokenNames[tokenID::EndOfFile],
-                 lineNumber);
-  }
-  if (currentIndex >= inputData[lineNumber].size()) {
-    currentIndex = 0;
-    lineNumber++;
-    return scanner();
-  }
-  while (currentIndex < inputData[lineNumber].size() &&
-         inputData[lineNumber][currentIndex] == ' ') {
-    currentIndex++;
-  }
-  if (currentIndex >= inputData[lineNumber].size()) {
-    currentIndex = 0;
-    lineNumber++;
-    return scanner();
-  }
-  auto identifierPair = isIdentifier(inputData[lineNumber]);
-  if (identifierPair.first) {
-    return Token(tokenID::Identifier, identifierPair.second, lineNumber);
-  }
-  auto keyWordPair = isKeyWord(inputData[lineNumber]);
-  if (keyWordPair.first) {
-    return Token(tokenID::Keyword, keyWordPair.second, lineNumber);
-  }
-  auto integerPair = isInteger(inputData[lineNumber]);
-  if (integerPair.first) {
-    return Token(tokenID::Integer, integerPair.second, lineNumber);
-  }
-  auto operatorPair = isOperator(inputData[lineNumber]);
-  if (operatorPair.first) {
-    return Token(tokenID::Operator, operatorPair.second, lineNumber);
-  }
-  auto commentPair = isComment(inputData[lineNumber]);
-  if (commentPair.first) {
-    return Token(tokenID::Comment, commentPair.second, lineNumber);
-  }
-  if (isupper(inputData[lineNumber][currentIndex])) {
-    throw std::runtime_error("Invalid token! Identifier must start with a lowercase letter\n");
-  }
-  if (validChars.find(inputData[lineNumber][currentIndex]) == std::string::npos) {
-    std::string msg = "\"";
-    msg += inputData[lineNumber][currentIndex];
-    msg += "\" is invalid character\n";
-    throw std::runtime_error(msg);
-  }
-  currentIndex++;
-  return Token(tokenID::InvalidToken, "", lineNumber);
+  return tokens[scanner_index++];
 }
-
 
 void testScanner() {
+  buildTable();
+  curr = get_next_char();
+  while (currentIndex <= inputData[lineNumber].size()) {
+    std::string value = {curr};
+    if (curr == '#') {
+      bool isValidComment = false;
+      for (int k = currentIndex + 1; k < inputData[lineNumber].size(); k++) {
+        value += inputData[lineNumber][k];
+        if (inputData[lineNumber][k] == '#') {
+          isValidComment = true;
+          currentIndex = k + 1;
+          nxt = inputData[lineNumber][k + 1];
+          break;
+        }
+      }
+      if (!isValidComment) {
+        std::cout << "Invalid Comment" << std::endl;
+        throw;
+      } else {
+        tokens.push_back(Token(Comment, value, lineNumber));
+      }
+    } else if (curr >= 'a' && curr <= 'z') {
+      nxt = get_next_char();
+      int len = 1;
+      while (currentIndex <= inputData[lineNumber].size() &&
+             (fsa_table[curr][nxt] != END_STATE || isalpha(nxt))) {
+        curr = nxt;
+        value += curr;
+        nxt = get_next_char();
+
+        len++;
+      }
+      // make sure it's not a keyword
+      if (std::find(keywords.begin(), keywords.end(), value) ==
+          keywords.end()) {
+        tokens.push_back(Token(Identifier, value, lineNumber));
+      
+      } else {
+        tokens.push_back(Token(Keyword, value, lineNumber));
+        
+      }
+
+    } else if (curr >= '0' && curr <= '9') {
+      nxt = get_next_char();
+      int len = 1;
+      while (currentIndex <= (int)inputData[lineNumber].size() &&
+             fsa_table[curr][nxt] != END_STATE) {
+        curr = nxt;
+        value += curr;
+        nxt = get_next_char();
+
+        len++;
+      }
+      tokens.push_back(Token(Integer, value, lineNumber));
+      
+    } else if (operators.find(curr) != std::string::npos) {
+      nxt = get_next_char();
+      int len = 1;
+      while (currentIndex <= inputData[lineNumber].size() &&
+             fsa_table[curr][nxt] != END_STATE) {
+        len++;
+
+        curr = nxt;
+        value += curr;
+        nxt = get_next_char();
+      }
+      if (follow.count(curr) && follow[curr] == nxt) {
+        value += nxt;
+        nxt = get_next_char();
+        curr = nxt;
+      }
+      tokens.push_back(Token(Operator, value, lineNumber));
+      
+    } else {
+      tokens.push_back(Token(InvalidToken, std::string{curr}, lineNumber));
+      nxt = get_next_char();
+    
+    }
+    while (nxt == '\0' || nxt == ' ') {
+      nxt = get_next_char();
+    }
+    curr = nxt;
+  }
+  currentIndex = 0;
+  lineNumber++;
+  if (lineNumber < inputData.size()) {
+    testScanner();
+  } else {
+    tokens.push_back(Token(EndOfFile, "End Of File", lineNumber));
+   
+  }
+
   Token token = scanner();
-  token.printToken();
   while (true) {
-    token = scanner();
-    if (token.tokenID == tokenID::EndOfFile) {
+    if (token.tokenID == EndOfFile || token.tokenID == InvalidToken) {
       token.printToken();
-      break;
+      exit(0);
     }
     token.printToken();
+    token = scanner();
   }
+  
 }

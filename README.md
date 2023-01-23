@@ -20,7 +20,9 @@ main.cpp:
 
 
 Usage:
+
 first type "make" in terminal 
+
 Usage 1: ./main 
 Usage 2: ./main < file
 Usage 3: ./main file

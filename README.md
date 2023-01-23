@@ -2,11 +2,11 @@ I'm using the option 2
 
 scanner.h:
 we have utility functions
-readInput() => reads input line by line
-scanner() returns the next token
-testScanner() 
+- readInput() => reads input line by line
+- scanner() returns the next token
+- testScanner() 
 
-token.h:
+`token.h`:
 contains Token struct which consists of 
 tokenID
 tokenInstance

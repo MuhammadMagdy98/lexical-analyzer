@@ -1,4 +1,4 @@
-*Lexical Analyzer in C++*
+**Lexical Analyzer in C++**
 
 `scanner.h`:
 we have utility functions

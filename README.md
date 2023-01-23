@@ -1,4 +1,4 @@
-I'm using the option 2
+*Lexical Analyzer in C++*
 
 `scanner.h`:
 we have utility functions
